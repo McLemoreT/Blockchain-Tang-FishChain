@@ -128,3 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/
+# Do not commit blockchain to git -- keep for local debugging only
+chain.json
