@@ -2,9 +2,7 @@
 
 ## Setup
 
-1. Import dependencies via pip3
-    1. `flask==1.1`
-    1. `requests==2.2`
+1. Import dependencies via pip3: `pip3 install -r requirements.txt`
 
 ## Run
 
