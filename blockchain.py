@@ -6,6 +6,12 @@ import time
 from flask import Flask, request
 import requests
 
+# FIXME: This data structure will not scale infinitely (memory constraints).
+# At some point we will need to query this data differently.
+# Perhaps periodically parsing blockchain and managing a different file
+# structure (per-fish).
+fishtory = dict()
+
 class Block:
     def __init__(self, index=0, transactions=[], timestamp=time.time(), previous_hash=0, nonce=0):
         """
@@ -56,8 +62,17 @@ class Blockchain:
                     timestamp=block['timestamp'],
                     previous_hash=block['previous_hash'],
                     nonce=block['nonce']))
+
+                for txn in block['transactions']:
+                    # TODO: validate txn based on fishchain rules
+                    if fishtory.get(txn['guid']):
+                        # Append
+                        fishtory[txn['guid']].push(txn)
+                    else:
+                        # Initialize
+                        fishtory[txn['guid']] = [txn]
+
             # TODO: validate chain file
-            # TODO: construct a tx map for all fish
             print("Processing complete!")
         if not os.path.exists('chain.json'):
             print("WARNING: chain.json does not exist. Mine a block to generate file.")
@@ -308,6 +323,15 @@ def verify_and_add_block():
 @app.route('/pending_tx')
 def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
+
+
+# endpoint to return the node's copy of the chain.
+# Our application will be using this endpoint to query
+# all the posts to display.
+@app.route('/fishtory', methods=['GET'])
+def get_fishtory():
+    guid = request.args.get('guid')
+    return json.dumps(fishtory.get(guid))
 
 
 def consensus():
