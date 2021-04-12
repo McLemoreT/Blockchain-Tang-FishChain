@@ -1,4 +1,5 @@
 from enum import Enum
+import uuid
 
 class Species(Enum):
     TROUT = 1
@@ -12,11 +13,11 @@ class Consumption(Enum):
     CONSUMED = 3
 
 class FishTxn:
-    def __init__(self, guid=0, speciesId=Species, caughtLat=0, caughtLong=0, consumption=Consumption):
+    def __init__(self, guid=str(uuid.uuid4()), speciesId=Species, caughtLat=0, caughtLong=0, consumption=Consumption):
         """
         Initializies a fish txn
         """
-        self.guid = guid # TODO: Use GUID lib
+        self.guid = guid
         self.speciesId = speciesId
         self.caughtLat = caughtLat
         self.caughtLong = caughtLong
