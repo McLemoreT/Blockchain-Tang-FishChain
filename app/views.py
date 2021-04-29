@@ -52,7 +52,7 @@ def index():
     fetch_posts()
     return render_template('index.html',
                            title='Fish: Decentralized '
-                                 'fish sharing',
+                                 'Fish Sharing',
                            posts=posts,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
