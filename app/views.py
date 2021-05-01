@@ -42,9 +42,10 @@ def fetch_fish(guid):
     get_chain_address = "{}/fishtory?guid={}".format(CONNECTED_NODE_ADDRESS, guid)
     response = requests.get(get_chain_address)
     if response.status_code == 200:
-        content = []
         fish = json.loads(response.content)
         return fish
+    else:
+        print('Did not receive OK200: ' + response.status_code)
 
 
 @app.route('/')
@@ -61,7 +62,10 @@ def index():
 @app.route('/fishtory')
 def fishtory():
     guid = request.args.get('guid')
-    fish = fetch_fish(guid)
+    if guid != None:
+        fish = fetch_fish(guid)
+    else:
+        fish = "{[]}"
     return render_template('fish.html',
                             title='What is up with my fish?',
                             fish=fish,
@@ -69,16 +73,82 @@ def fishtory():
                             readable_time=timestamp_to_string)
 
 
-@app.route('/submit', methods=['POST'])
-def submit_textarea():
+@app.route('/txn/regulator')
+def txn_regulator():
+    return render_template('regulator.html',
+                            title='FishChain - Mint a fish',
+                            node_address=CONNECTED_NODE_ADDRESS,
+                            readable_time=timestamp_to_string)
+
+
+@app.route('/txn/fisher')
+def txn_fisher():
+    return render_template('fisher.html',
+                            title='FishChain - Catch a fish',
+                            node_address=CONNECTED_NODE_ADDRESS,
+                            readable_time=timestamp_to_string)
+
+
+@app.route('/txn/grocer')
+def txn_grocer():
+    return render_template('grocer.html',
+                            title='FishChain - Buy a fish',
+                            node_address=CONNECTED_NODE_ADDRESS,
+                            readable_time=timestamp_to_string)
+
+
+@app.route('/txn/customer')
+def txn_customer():
+    return render_template('customer.html',
+                            title='FishChain - Consume a fish',
+                            node_address=CONNECTED_NODE_ADDRESS,
+                            readable_time=timestamp_to_string)
+
+
+def post_txn(post_object):
+    # Submit a transaction
+    new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
+    print(new_tx_address)
+    print(post_object)
+
+    requests.post(new_tx_address,
+                  json=post_object,
+                  headers={'Content-type': 'application/json'})
+
+    return redirect('/')
+
+
+@app.route('/submit/mint', methods=['POST'])
+def submit_txn_mint():
+    """
+    Endpoint to create a new transaction via our application.
+    """
+
+    consumption = 0 # MINTED
+
+    post_object = {
+        'consumption': consumption,
+    }
+    return post_txn(post_object)
+
+
+@app.route('/submit/fished', methods=['POST'])
+def submit_txn_fished():
     """
     Endpoint to create a new transaction via our application.
     """
     guid = request.form["guid"]
+    print('Guid ' + guid)
+    fish = fetch_fish(guid)
+    print(fish[0].get('consumption'))
+    if fish[0].get('consumption') != 0:
+        print("Fish not in state 0, is " + fish[0].get('consumption'))
+        return redirect('/')
+
     speciesId = request.form["speciesId"]
     caughtLat = request.form["caughtLat"]
     caughtLong = request.form["caughtLong"]
-    consumption = request.form["consumption"]
+    consumption = 1 # FISHED
 
     post_object = {
         'guid': guid,
@@ -87,16 +157,71 @@ def submit_textarea():
         'caughtLong': caughtLong,
         'consumption': consumption,
     }
+    return post_txn(post_object)
 
-    # Submit a transaction
-    new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
-    print(new_tx_address)
 
-    requests.post(new_tx_address,
-                  json=post_object,
-                  headers={'Content-type': 'application/json'})
+@app.route('/submit/sold', methods=['POST'])
+def submit_txn_sold():
+    """
+    Endpoint to create a new transaction via our application.
+    """
 
-    return redirect('/')
+    guid = request.form["guid"]
+    fish = fetch_fish(guid)
+    if fish == None:
+        # Error looking up fish. It might not exist?
+        print("Fish is None")
+        return redirect('/')
+
+    if fish[0].get('consumption') != 1 or fish[0].get('consumption') != 2:
+        print("Fish must be state 1 or 2, is " + fish[0].get('consumption'))
+        return redirect('/')
+
+    speciesId = fish[1].get('speciesId')
+    caughtLat = fish[1].get('caughtLat')
+    caughtLong = fish[1].get('caughtLong')
+    consumption = 2 # SOLD
+
+    post_object = {
+        'guid': guid,
+        'speciesId': speciesId,
+        'caughtLat': caughtLat,
+        'caughtLong': caughtLong,
+        'consumption': consumption,
+    }
+    return post_txn(post_object)
+
+
+@app.route('/submit/consumed', methods=['POST'])
+def submit_txn_consumed():
+    """
+    Endpoint to create a new transaction via our application.
+    """
+
+    guid = request.form["guid"]
+    fish = fetch_fish(guid)
+    if fish == None:
+        # Error looking up fish. It might not exist?
+        print("Fish is None")
+        return redirect('/')
+
+    if fish[0].get('consumption') != 2:
+        print("Fish must be state 2, is " + fish[0].get('consumption'))
+        return redirect('/')
+
+    speciesId = fish[1].get('speciesId')
+    caughtLat = fish[1].get('caughtLat')
+    caughtLong = fish[1].get('caughtLong')
+    consumption = 3 # CONSUMED
+
+    post_object = {
+        'guid': guid,
+        'speciesId': speciesId,
+        'caughtLat': caughtLat,
+        'caughtLong': caughtLong,
+        'consumption': consumption,
+    }
+    return post_txn(post_object)
 
 
 def timestamp_to_string(epoch_time):

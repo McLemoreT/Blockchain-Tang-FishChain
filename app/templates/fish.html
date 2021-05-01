@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<input id="lookup-guid" type="number" placeholder="Look up fish via ID">
+<input id="lookup-guid" type="string" placeholder="Look up fish via ID">
 <button id="btn-lookup">Lookup</button>
 <!-- TODO use QR code -->
 
@@ -18,11 +18,11 @@
 <br>
 <!-- TODO Make this better -->
 <h1>You have a <em>
-    {% if fish[0].speciesId == '1' %}
+    {% if fish[1].speciesId == '1' or fish[1].speciesId == 1 %}
     TROUT
-    {% elif fish[0].speciesId == '2' %}
+    {% elif fish[1].speciesId == '2' or fish[1].speciesId == 2 %}
     CATFISH
-    {% elif fish[0].speciesId == '3' %}
+    {% elif fish[1].speciesId == '3' or fish[1].speciesId == 3 %}
     TUNA
     {% endif %}
     </em>
@@ -34,20 +34,20 @@
 <li class="fish-event">
     This fish was
     <strong>
-    {% if event.consumption == '0' %}
+    {% if event.consumption == '0' or event.consumption == 0 %}
     MINTED
-    {% elif event.consumption == '1' %}
+    {% elif event.consumption == '1' or event.consumption == 1 %}
     FISHED
     at {{ event.caughtLat }}, {{ event.caughtLong }}
-    {% elif event.consumption == '2' %}
+    {% elif event.consumption == '2' or event.consumption == 2 %}
     SOLD
-    {% elif event.consumption == '3' %}
+    {% elif event.consumption == '3' or event.consumption == 3 %}
     CONSUMED
     {% endif %}
     </strong>
     <em>
         <script>
-            document.write(dayjs().to(dayjs({{event.timestamp}})))
+            document.write(dayjs().to(dayjs({{event.timestamp}} * 1000)))
         </script>
     </em>
 </li>
