@@ -208,6 +208,10 @@ def new_transaction():
     return "Success", 201
 
 
+@app.route('/', methods=['GET'])
+def print_help():
+    return "Visit /chain to dump the chain"
+
 # endpoint to return the node's copy of the chain.
 # Our application will be using this endpoint to query
 # all the posts to display.
