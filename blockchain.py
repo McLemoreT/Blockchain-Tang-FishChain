@@ -3,6 +3,7 @@ import json
 import os
 import time
 
+from .fishtx import FishTxn
 from flask import Flask, request
 import requests
 
@@ -11,6 +12,20 @@ import requests
 # Perhaps periodically parsing blockchain and managing a different file
 # structure (per-fish).
 fishtory = dict()
+
+def reload_fishtory(chain):
+    fishtory.clear()
+    for block in chain:
+        for txn in block.transactions:
+            # TODO: validate txn based on fishchain rules
+            if fishtory.get(txn['guid']) != None:
+                # Append
+                fishtory[txn['guid']].append(txn)
+            else:
+                # Initialize
+                fishtory[txn['guid']] = [txn]
+    print('Fishtory compiled')
+
 
 class Block:
     def __init__(self, index=0, transactions=[], timestamp=time.time(), previous_hash=0, nonce=0):
@@ -63,17 +78,13 @@ class Blockchain:
                     previous_hash=block['previous_hash'],
                     nonce=block['nonce']))
 
-                for txn in block['transactions']:
-                    # TODO: validate txn based on fishchain rules
-                    if fishtory.get(txn['guid']):
-                        # Append
-                        fishtory[txn['guid']].push(txn)
-                    else:
-                        # Initialize
-                        fishtory[txn['guid']] = [txn]
+            reload_fishtory(self.chain)
 
             # TODO: validate chain file
             print("Processing complete!")
+        else:
+            self.create_genesis_block()
+
         if not os.path.exists('chain.json'):
             print("WARNING: chain.json does not exist. Mine a block to generate file.")
 
@@ -161,6 +172,7 @@ class Blockchain:
         self.add_block(next_block, proof)
         self.export_chain()
         self.unconfirmed_transactions = [] # Reset
+        reload_fishtory(self.chain)
         return next_block
 
     def export_chain(self):
@@ -181,7 +193,6 @@ app = Flask(__name__)
 
 # the node's copy of blockchain
 blockchain = Blockchain(use_file=True)
-blockchain.create_genesis_block()
 
 # the address to other participating members of the network
 peers = set()
@@ -192,14 +203,31 @@ peers = set()
 @app.route('/new_transaction', methods=['POST'])
 def new_transaction():
     tx_data = request.get_json()
-    required_fields = ["guid", "speciesId", "caughtLat", "caughtLong", "consumption"]
+    print('TX Data')
+    print(tx_data)
+    # Use data to populate a fish
+    if tx_data.get('guid') != None:
+        fish_data = FishTxn(guid=tx_data.get('guid'),
+            speciesId=tx_data.get('speciesId'),
+            caughtLat=tx_data.get('caughtLat'),
+            caughtLong=tx_data.get('caughtLong'),
+            consumption=tx_data.get('consumption')
+        )
+    else:
+        # This is an empty fish (probably)
+        # TODO: Verify who is allowed to mint this
+        fish_data = FishTxn()
+        print('Empty fish token created')
+    print('Fish Data')
+    print(vars(fish_data))
+    print("Adding txn for fish " + fish_data.guid)
     # TODO: Additional verification based on fishnet rules
 
-    print("Adding txn for fish " + tx_data.get('guid'))
-
-    for field in required_fields:
-        if not tx_data.get(field):
-            return "Invalid transaction data", 404
+    tx_data['guid'] = fish_data.guid
+    tx_data['speciesId'] = fish_data.speciesId
+    tx_data['caughtLat'] = fish_data.caughtLat
+    tx_data['caughtLong'] = fish_data.caughtLong
+    tx_data['consumption'] = fish_data.consumption
 
     tx_data["timestamp"] = time.time()
 
@@ -208,12 +236,28 @@ def new_transaction():
     return "Success", 201
 
 
+@app.route('/', methods=['GET'])
+def print_help():
+    return "Visit /chain to dump the chain"
+
+
 # endpoint to return the node's copy of the chain.
 # Our application will be using this endpoint to query
 # all the posts to display.
 @app.route('/chain', methods=['GET'])
 def get_chain():
     return blockchain.dump()
+
+
+@app.route('/keys', methods=['GET'])
+def get_keys():
+    return json.dumps({"keys": list(fishtory.keys())})
+
+
+@app.route('/dumpfishtory', methods=['GET'])
+def dump_fishtory():
+    print(fishtory)
+    return json.dumps(fishtory)
 
 
 # endpoint to request the node to mine the unconfirmed

@@ -4,21 +4,31 @@
 {% block content %}
 	<br>
 
-	<center>
-        Welcome to Fishchain. To get started, select who you are.
-        <ul>
-			<li><a href="/txn/regulator">Regulator</a></li>
-			<li><a href="/txn/fisher">Fisher</a></li>
-            <li><a href="/txn/grocer">Grocer</a></li>
-			<li><a href="/txn/customer">Customer</a></li>
-		</ul>
+    <center>
+		<form action="/submit/fished" id="textform" method="post">
+			<label for="speciesId">Choose your Fish:</label>
+			<select name="speciesId" id="speciesId" form="textform">
+				<option value="1">Trout</option>
+				<option value="2">Catfish</option>
+				<option value="3">Tuna</option>
+			</select>
+			<br>
 
-		<a href="/fishtory">Lookup Fish Data</a>
-		<br><br>
-		<strong>Debug</strong>
-		<a href="{{node_address}}/chain">Open raw chain</a>
-		<a href="{{node_address}}/keys">Get all GUIDs</a>
-		<a href="{{node_address}}/pending_tx">Get unconfirmed transactions</a>
+			<!-- Apply js code here -->
+			<div style="width: 500px" id="reader"></div>
+
+			<label>Scan QR code to match to load enter fish's GUID:</label>
+			<input type="submit" value="Scan QR Code">
+			<input type="text" name="guid" placeholder="GUID">
+			<br>
+
+			<label>Enter the fishing location's latitude and longitude:</label>
+			<input type="number" name="caughtLat" placeholder="Caught Lat">
+			<input type="number" name="caughtLong" placeholder="Caught Long">
+			<br>
+
+			<input type="submit" value="Post">
+		</form>
     </center>
 
 		<br>
@@ -27,19 +37,7 @@
 		<a href="/"><button>Resync</button></a>
 
 		<div style="margin: 20px;">
-
-		{% for post in posts %}
-		<div class="post_box">
-			<div class="post_box-header">
-				GUID {{post.guid}} (Species {{post.speciesId}}) from
-				{{post.caughtLat}}, {{post.caughtLong}}.
-				In state {{post.consumption}}
-				<div class="post_box-subtitle"> Posted at <i>{{readable_time(post.timestamp)}}</i></div>
-			</div>
-		</div>
-		{% endfor %}
-		
-
+            
 		<style>
 			label {
 				font-weight: bold;
