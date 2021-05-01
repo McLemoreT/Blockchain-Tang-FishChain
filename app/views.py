@@ -65,7 +65,7 @@ def fishtory():
     if guid != None:
         fish = fetch_fish(guid)
     else:
-        fish = "{[]}"
+        fish = []
     return render_template('fish.html',
                             title='What is up with my fish?',
                             fish=fish,
