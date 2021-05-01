@@ -34,15 +34,39 @@ def fetch_posts():
                        reverse=True)
 
 
+def fetch_fish(guid):
+    """
+    Function to fetch the chain from a blockchain node, parse the
+    data and store it locally.
+    """
+    get_chain_address = "{}/fishtory?guid={}".format(CONNECTED_NODE_ADDRESS, guid)
+    response = requests.get(get_chain_address)
+    if response.status_code == 200:
+        content = []
+        fish = json.loads(response.content)
+        return fish
+
+
 @app.route('/')
 def index():
     fetch_posts()
     return render_template('index.html',
                            title='Fish: Decentralized '
-                                 'fish sharing',
+                                 'Fish Sharing',
                            posts=posts,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
+
+
+@app.route('/fishtory')
+def fishtory():
+    guid = request.args.get('guid')
+    fish = fetch_fish(guid)
+    return render_template('fish.html',
+                            title='What is up with my fish?',
+                            fish=fish,
+                            node_address=CONNECTED_NODE_ADDRESS,
+                            readable_time=timestamp_to_string)
 
 
 @app.route('/submit', methods=['POST'])

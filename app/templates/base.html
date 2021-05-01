@@ -1,20 +1,33 @@
 <html>
-  <head>
+<head>
+    <link rel="shortcut icon" type="image/jpg" href="https://www.blackmountaincoins.com/media/catalog/product/cache/1/image/900x900/9df78eab33525d08d6e5fb8d27136e95/1/7/17385-2013-Palau-Mandarin-Fish-Coin_1.jpg" />
     <title>{{ title }}</title>
-  </head>
-  <body>
-    <div><a href="/index">Home</a></div>
-    <center><h1>{{ title }}</h1></center>
-    <hr>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <ul>
-    {% for message in messages %}
-        <li>{{ message }} </li>
-    {% endfor %}
-    </ul>
-    {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-  </body>
+    <!-- Import day.js.org via CDN -->
+    <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+    <script src="https://unpkg.com/dayjs@1.8.21/plugin/relativeTime.js"></script>
+    <script>
+        // Install plugin
+        dayjs.extend(dayjs_plugin_relativeTime)
+    </script>
+    <!-- QR Code scanning -->
+    <script src="https://raw.githubusercontent.com/mebjas/html5-qrcode/master/minified/html5-qrcode.min.js"></script>
+</head>
+    <body>
+        <div><a href="/">Home</a></div>
+        <center><h1>{{ title }}</h1></center>
+        <br>
+        <img src="https://www.blackmountaincoins.com/media/catalog/product/cache/1/image/900x900/9df78eab33525d08d6e5fb8d27136e95/1/7/17385-2013-Palau-Mandarin-Fish-Coin_1.jpg" style="width:100px; display: block; margin:auto;">
+        <h6 style="font-style:oblique">"This background image was taken from https://www.etsy.com/listing/228200273/ocean-fish-art-ocean-scene-teal-decor . Replace if this grows beyond a school project!"</h6>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
 </html>
+
+<style>
+    body {
+        background-image: linear-gradient(0deg, rgb(38 0 255 / 40%), rgb(255 255 255 / 60%)), url(https://i.etsystatic.com/10834941/r/il/6cce52/750293405/il_794xN.750293405_mrlj.jpg);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: 100% 100%;
+    }
+</style>

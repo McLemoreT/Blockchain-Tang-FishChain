@@ -1,9 +1,16 @@
 import hashlib
 import json
+import os
 import time
 
 from flask import Flask, request
 import requests
+
+# FIXME: This data structure will not scale infinitely (memory constraints).
+# At some point we will need to query this data differently.
+# Perhaps periodically parsing blockchain and managing a different file
+# structure (per-fish).
+fishtory = dict()
 
 class Block:
     def __init__(self, index=0, transactions=[], timestamp=time.time(), previous_hash=0, nonce=0):
@@ -35,12 +42,40 @@ class Blockchain:
     # difficulty of our PoW algorithm
     difficulty = 2
 
-    def __init__(self):
+    def __init__(self, use_file=False):
         """
         A function that initialize blockchian.
         """
         self.unconfirmed_transactions = []
         self.chain = []
+        if use_file and os.path.exists('chain.json'):
+            # import chain from before
+            chain_file = open('chain.json', 'r')
+            print("Processing blockchain from disk...")
+            decoded_file = json.loads(chain_file.read())
+            disk_chain = decoded_file['chain']
+            # Reconstruct our blockchain
+            for block in disk_chain:
+                self.chain.append(Block(
+                    index=block['index'],
+                    transactions=block['transactions'],
+                    timestamp=block['timestamp'],
+                    previous_hash=block['previous_hash'],
+                    nonce=block['nonce']))
+
+                for txn in block['transactions']:
+                    # TODO: validate txn based on fishchain rules
+                    if fishtory.get(txn['guid']):
+                        # Append
+                        fishtory[txn['guid']].push(txn)
+                    else:
+                        # Initialize
+                        fishtory[txn['guid']] = [txn]
+
+            # TODO: validate chain file
+            print("Processing complete!")
+        if not os.path.exists('chain.json'):
+            print("WARNING: chain.json does not exist. Mine a block to generate file.")
 
     def create_genesis_block(self):
         """
@@ -124,14 +159,28 @@ class Blockchain:
         )
         proof = Blockchain.proof_of_work(next_block)
         self.add_block(next_block, proof)
+        self.export_chain()
         self.unconfirmed_transactions = [] # Reset
         return next_block
+
+    def export_chain(self):
+        chain_file = open('chain.json', 'w')
+        chain_file.write(self.dump())
+        chain_file.close()
+
+    def dump(self):
+        chain_data = []
+        for block in blockchain.chain:
+            chain_data.append(block.__dict__)
+        return json.dumps({"length": len(chain_data),
+                            "chain": chain_data,
+                            "peers": list(peers)})
 
 
 app = Flask(__name__)
 
 # the node's copy of blockchain
-blockchain = Blockchain()
+blockchain = Blockchain(use_file=True)
 blockchain.create_genesis_block()
 
 # the address to other participating members of the network
@@ -164,12 +213,7 @@ def new_transaction():
 # all the posts to display.
 @app.route('/chain', methods=['GET'])
 def get_chain():
-    chain_data = []
-    for block in blockchain.chain:
-        chain_data.append(block.__dict__)
-    return json.dumps({"length": len(chain_data),
-                       "chain": chain_data,
-                       "peers": list(peers)})
+    return blockchain.dump()
 
 
 # endpoint to request the node to mine the unconfirmed
@@ -279,6 +323,15 @@ def verify_and_add_block():
 @app.route('/pending_tx')
 def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
+
+
+# endpoint to return the node's copy of the chain.
+# Our application will be using this endpoint to query
+# all the posts to display.
+@app.route('/fishtory', methods=['GET'])
+def get_fishtory():
+    guid = request.args.get('guid')
+    return json.dumps(fishtory.get(guid))
 
 
 def consensus():

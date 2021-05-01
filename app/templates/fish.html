@@ -1,0 +1,61 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<input id="lookup-guid" type="number" placeholder="Look up fish via ID">
+<button id="btn-lookup">Lookup</button>
+<!-- TODO use QR code -->
+
+<script>
+    document.getElementById('btn-lookup').addEventListener('click', () => {
+        const guid = document.getElementById('lookup-guid').value
+        window.location.search = `guid=${guid}`
+        // Redirect!
+    })
+</script>
+
+<br>
+<!-- TODO Make this better -->
+<h1>You have a <em>
+    {% if fish[0].speciesId == '1' %}
+    TROUT
+    {% elif fish[0].speciesId == '2' %}
+    CATFISH
+    {% elif fish[0].speciesId == '3' %}
+    TUNA
+    {% endif %}
+    </em>
+    (GUID {{fish[0].guid}})
+</h1>
+
+<ul>
+{% for event in fish %}
+<li class="fish-event">
+    This fish was
+    <strong>
+    {% if event.consumption == '0' %}
+    MINTED
+    {% elif event.consumption == '1' %}
+    FISHED
+    at {{ event.caughtLat }}, {{ event.caughtLong }}
+    {% elif event.consumption == '2' %}
+    SOLD
+    {% elif event.consumption == '3' %}
+    CONSUMED
+    {% endif %}
+    </strong>
+    <em>
+        <script>
+            document.write(dayjs().to(dayjs({{event.timestamp}})))
+        </script>
+    </em>
+</li>
+{% endfor %}
+</ul>
+
+<pre style="display:none">
+{{fish}}
+</pre>
+
+{% endblock %}
