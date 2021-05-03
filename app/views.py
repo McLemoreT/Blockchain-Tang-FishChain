@@ -173,8 +173,9 @@ def submit_txn_sold():
         print("Fish is None")
         return redirect('/')
 
-    if fish[0].get('consumption') != 1 or fish[0].get('consumption') != 2:
-        print("Fish must be state 1 or 2, is " + fish[0].get('consumption'))
+    lastConsumption = fish[len(fish) - 1].get('consumption')
+    if lastConsumption != 1 and lastConsumption != 2:
+        print("Fish must be state 1 or 2, is " + str(lastConsumption))
         return redirect('/')
 
     speciesId = fish[1].get('speciesId')
@@ -205,8 +206,9 @@ def submit_txn_consumed():
         print("Fish is None")
         return redirect('/')
 
-    if fish[0].get('consumption') != 2:
-        print("Fish must be state 2, is " + fish[0].get('consumption'))
+    lastConsumption = fish[len(fish) - 1].get('consumption')
+    if lastConsumption != 2:
+        print("Fish must be state 2, is " + str(lastConsumption))
         return redirect('/')
 
     speciesId = fish[1].get('speciesId')
